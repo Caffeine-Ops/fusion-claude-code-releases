@@ -100,9 +100,29 @@ check_path_hint() {
   case ":$PATH:" in
     *":$BIN_DIR:"*) ;;
     *)
-      printf '\nPATH hint:\n' >&2
-      printf '  Add this to your shell profile:\n' >&2
-      printf '  export PATH="%s:$PATH"\n' "$BIN_DIR" >&2
+      local shell_name profile_path
+      shell_name="$(basename "${SHELL:-sh}")"
+      case "$shell_name" in
+        zsh)
+          profile_path="$HOME/.zshrc"
+          ;;
+        bash)
+          if [[ -f "$HOME/.bash_profile" && ! -f "$HOME/.bashrc" ]]; then
+            profile_path="$HOME/.bash_profile"
+          else
+            profile_path="$HOME/.bashrc"
+          fi
+          ;;
+        *)
+          profile_path="$HOME/.profile"
+          ;;
+      esac
+
+      printf '\nPATH setup required:\n' >&2
+      printf '  Current shell: %s\n' "$shell_name" >&2
+      printf '  Run these commands to persist the PATH and reload your shell:\n' >&2
+      printf '  echo '\''export PATH="%s:$PATH"'\'' >> "%s"\n' "$BIN_DIR" "$profile_path" >&2
+      printf '  source "%s"\n' "$profile_path" >&2
       ;;
   esac
 }
